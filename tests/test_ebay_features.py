@@ -9,49 +9,63 @@ from pages.cart_page import CartPage
 
 class TestEbayCore:
 
+    @pytest.mark.order(1)
     def test_01_authentication(self, page, data):
-        """Test the user login flow with soft-skip on Captcha."""
+        """1. Authentication Test"""
         login_page = LoginPage(page)
-        # Random sleep to avoid bot detection
-        time.sleep(random.uniform(2, 5))
+        time.sleep(random.uniform(2, 4))
         try:
             login_page.login(data["username"], data["password"])
         except Exception as e:
-            print(f"Authentication blocked: {str(e)}")
-            pytest.skip("Skipping authentication due to security block")
+            print(f"Authentication skipped/failed: {str(e)}")
+            pytest.skip("Login flow interrupted (likely Captcha)")
 
-    def test_02_product_search(self, page, data):
-        """Test searching for an item and applying price filters."""
+    @pytest.mark.order(2)
+    def test_02_search_function_with_conditions(self, page, data):
+        """2. Search function with price conditions"""
         home_page = HomePage(page)
         search_page = SearchResultsPage(page)
         
-        # Soft start
-        time.sleep(random.uniform(3, 6))
+        time.sleep(random.uniform(3, 5))
         home_page.search_item(data["search_term"])
-        time.sleep(random.uniform(2, 4))
+        time.sleep(2)
         search_page.filter_by_price(data["min_price"], data["max_price"])
+        
+        # Verify we are on results page and results are visible
+        assert "Search" in page.title() or data["search_term"].lower() in page.title().lower()
 
-    def test_03_add_to_cart_and_verify(self, page, data):
-        """Combined test for adding to cart and verifying total to minimize bot detection."""
+    @pytest.mark.order(3)
+    def test_03_add_items_to_cart(self, page, data):
+        """3. addItemsToCart"""
+        home_page = HomePage(page)
+        search_page = SearchResultsPage(page)
+        item_page = ItemPage(page)
+        
+        # We need to be on an item page to add to cart
+        time.sleep(random.uniform(4, 6))
+        home_page.search_item(data["search_term"])
+        search_page.filter_by_price(data["min_price"], data["max_price"])
+        search_page.select_first_item()
+        
+        item_page.add_to_cart()
+        time.sleep(3)
+        # Verify cart counter or navigation to cart
+        assert "cart" in page.url.lower() or "shopping cart" in page.title().lower() or page.locator("#gh-cart-n").is_visible()
+
+    @pytest.mark.order(4)
+    def test_04_assert_cart_total_not_exceeds(self, page, data):
+        """4. assertCartTotalNotExceeds"""
+        # Note: This test assumes an item was added in previous steps or adds one now
         home_page = HomePage(page)
         search_page = SearchResultsPage(page)
         item_page = ItemPage(page)
         cart_page = CartPage(page)
         
-        # 1. Search with human-like delay
-        time.sleep(random.uniform(5, 8))
+        # Ensure there is something in the cart
         home_page.search_item(data["search_term"])
-        time.sleep(5)
-        
-        # 2. Select first real item
+        search_page.filter_by_price(data["min_price"], data["max_price"])
         search_page.select_first_item()
-        page.wait_for_load_state("load")
-        time.sleep(5)
-        
-        # 3. Add to cart
         item_page.add_to_cart()
-        time.sleep(5)
         
-        # 4. Verify cart total (Budget per item, items count)
         budget = float(data["max_price"])
         cart_page.assert_cart_total_not_exceeds(budget, 1)
