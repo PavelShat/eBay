@@ -1,6 +1,0 @@
-Error capturing screenshot: Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot
-Call log:
-  - taking page screenshot
-  - waiting for fonts to load...
-  - fonts loaded
-

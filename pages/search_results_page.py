@@ -1,5 +1,4 @@
 import re
-import allure
 import random
 from pages.base_page import BasePage
 
@@ -12,7 +11,6 @@ class SearchResultsPage(BasePage):
         # Broadest possible selector for item links, using multiple common eBay classes
         self.item_links = self.page.locator(".s-item a.s-item__link[href*='/itm/'], .s-card__link[href*='/itm/'], a.s-item__link[href*='/itm/']")
 
-    @allure.step("Filter by price range: ${min_price} - ${max_price}")
     def filter_by_price(self, min_price: str, max_price: str):
         self.min_price_input.first.wait_for(state="visible", timeout=15000)
         self.min_price_input.first.fill(min_price)
@@ -22,7 +20,6 @@ class SearchResultsPage(BasePage):
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(2000)
 
-    @allure.step("Select the first real item with a valid ID")
     def select_first_item(self):
         """
         Extracts a valid product URL by verifying it contains a 10-12 digit item ID.
@@ -31,7 +28,6 @@ class SearchResultsPage(BasePage):
         try:
             self.page.wait_for_selector(".s-item, .s-card__link, a.s-item__link", state="attached", timeout=30000)
         except Exception:
-            allure.attach(self.page.content(), name="failure_page_source", attachment_type=allure.attachment_type.HTML)
             raise
 
         # Give it a moment to render
@@ -66,7 +62,7 @@ class SearchResultsPage(BasePage):
         if not target_href:
             raise Exception("Could not find any valid item links on the search results page.")
 
-        allure.attach(f"Navigating directly to item: {target_href}", name="Navigation Info")
+        print(f"Navigating directly to item: {target_href}")
         self.page.goto(target_href)
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(2000)

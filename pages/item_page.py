@@ -1,4 +1,3 @@
-import allure
 import random
 from pages.base_page import BasePage
 
@@ -8,11 +7,7 @@ class ItemPage(BasePage):
         # Expanded list of possible selectors for the 'Add to cart' button across all eBay locales/UI versions
         self.add_to_cart_btn = self.page.locator("#atcBtn_btn_1, #isCartBtn_btn, #atcRedesignId_btn, [id*='atc'], [data-testid*='atc'], span:has-text('Add to cart')").first
 
-    @allure.step("Add item to cart with robust variant handling")
     def add_to_cart(self):
-        # Log current page state for debugging
-        allure.attach(self.page.url, name="Item URL")
-        
         # 1. Try to handle any mandatory variants that might block the 'Add to cart' button
         try:
             # Look for all buttons that might be listboxes
@@ -43,6 +38,5 @@ class ItemPage(BasePage):
         self.add_to_cart_btn.click(force=True)
         
         # 3. Handle 'Go to cart' or 'No thanks' popups that might appear after adding
-        # Use simple load state as networkidle often timeouts on eBay
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(2000)

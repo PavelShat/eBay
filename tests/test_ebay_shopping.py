@@ -1,6 +1,5 @@
 import json
 import pytest
-import allure
 from pages.login_page import LoginPage
 from pages.home_page import HomePage
 from pages.search_results_page import SearchResultsPage
@@ -13,7 +12,6 @@ def load_test_data():
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
-@allure.feature("eBay Shopping Flow")
 @pytest.mark.parametrize("data", load_test_data())
 async def test_ebay_shopping_flow(page, data):
     # Initialize Page Objects mapped to Playwright's page fixture
@@ -22,8 +20,6 @@ async def test_ebay_shopping_flow(page, data):
     search_page = SearchResultsPage(page)
     item_page = ItemPage(page)
     cart_page = CartPage(page)
-
-    allure.dynamic.title(f"Search for {data['search_term']} and verify cart")
 
     # 1. Authentication
     await login_page.login(data["username"], data["password"])

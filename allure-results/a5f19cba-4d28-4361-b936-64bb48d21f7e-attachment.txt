@@ -1,1 +1,0 @@
-Warning: Login was interrupted. Test will continue as guest if possible.

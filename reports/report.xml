@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="3" tests="5" time="97.167" timestamp="2026-04-22T13:28:26.325624" hostname="LAPTOP-TBGULIQL"><testcase classname="tests.test_async_verification" name="test_assert_cart_total_not_exceeds_scenario[chromium]" time="5.309"><skipped type="pytest.skip" message="async def function and no async plugin installed (see warnings)">C:\Users\pavel\myProjects\eBay\.venv\Lib\site-packages\_pytest\python.py:185: async def function and no async plugin installed (see warnings)</skipped></testcase><testcase classname="tests.test_ebay_features.TestEbayCore" name="test_01_authentication[data0-chromium]" time="19.348"><skipped type="pytest.skip" message="Skipping authentication due to security block">C:\Users\pavel\myProjects\eBay\tests\test_ebay_features.py:21: Skipping authentication due to security block</skipped></testcase><testcase classname="tests.test_ebay_features.TestEbayCore" name="test_02_product_search[data0-chromium]" time="17.373" /><testcase classname="tests.test_ebay_features.TestEbayCore" name="test_03_add_to_cart_and_verify[data0-chromium]" time="54.257"><failure message="playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 10000ms exceeded.&#10;Call log:&#10;  - waiting for locator(&quot;div[data-test-id='SUBTOTAL'] span.text-display-span&quot;) to be visible">self = &lt;test_ebay_features.TestEbayCore object at 0x00000294FB876D70&gt;
+page = &lt;Page url='https://www.ebay.com/splashui/captcha?ap=1&amp;appName=orch&amp;ru=https%3A%2F%2Fcart.ebay.com%2F&amp;iid=2a6ce6b7-28da-4c68-8186-7f0699c39952&amp;iim=rMTQ3Ljy&amp;iia=ZiIzNS4yvg&amp;iiz=YLuMTMuOTg*fIy'&gt;
+data = {'max_price': '30', 'min_price': '10', 'password': 'NemoxQ@1504', 'search_term': 'Coffee Mug', ...}
+
+    def test_03_add_to_cart_and_verify(self, page, data):
+        """Combined test for adding to cart and verifying total to minimize bot detection."""
+        home_page = HomePage(page)
+        search_page = SearchResultsPage(page)
+        item_page = ItemPage(page)
+        cart_page = CartPage(page)
+    
+        # 1. Search with human-like delay
+        time.sleep(random.uniform(5, 8))
+        home_page.search_item(data["search_term"])
+        time.sleep(5)
+    
+        # 2. Select first real item
+        search_page.select_first_item()
+        page.wait_for_load_state("load")
+        time.sleep(5)
+    
+        # 3. Add to cart
+        item_page.add_to_cart()
+        time.sleep(5)
+    
+        # 4. Verify cart total (Budget per item, items count)
+        budget = float(data["max_price"])
+&gt;       cart_page.assert_cart_total_not_exceeds(budget, 1)
+
+tests\test_ebay_features.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+pages\cart_page.py:34: in assert_cart_total_not_exceeds
+    raise e
+pages\cart_page.py:19: in assert_cart_total_not_exceeds
+    self.cart_total.wait_for(state="visible", timeout=10000)
+.venv\Lib\site-packages\playwright\sync_api\_generated.py:18074: in wait_for
+    self._sync(self._impl_obj.wait_for(timeout=timeout, state=state))
+.venv\Lib\site-packages\playwright\_impl\_locator.py:710: in wait_for
+    await self._frame.wait_for_selector(
+.venv\Lib\site-packages\playwright\_impl\_frame.py:369: in wait_for_selector
+    await self._channel.send(
+.venv\Lib\site-packages\playwright\_impl\_connection.py:69: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;playwright._impl._connection.Connection object at 0x00000294F9840AD0&gt;
+cb = &lt;function Channel.send.&lt;locals&gt;.&lt;lambda&gt; at 0x00000294FC1D22A0&gt;
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -&gt; Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        st: List[inspect.FrameInfo] = getattr(
+            task, "__pw_stack__", None
+        ) or inspect.stack(0)
+    
+        parsed_st = _extract_stack_trace_information_from_stack(st, is_internal, title)
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+&gt;           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 10000ms exceeded.
+E           Call log:
+E             - waiting for locator("div[data-test-id='SUBTOTAL'] span.text-display-span") to be visible
+
+.venv\Lib\site-packages\playwright\_impl\_connection.py:559: TimeoutError</failure></testcase><testcase classname="tests.test_ebay_shopping" name="test_ebay_shopping_flow[chromium-data0]" time="0.557"><skipped type="pytest.skip" message="async def function and no async plugin installed (see warnings)">C:\Users\pavel\myProjects\eBay\.venv\Lib\site-packages\_pytest\python.py:185: async def function and no async plugin installed (see warnings)</skipped></testcase></testsuite></testsuites>

@@ -1,4 +1,3 @@
-import allure
 from pages.base_page import BasePage
 
 class LoginPage(BasePage):
@@ -10,7 +9,6 @@ class LoginPage(BasePage):
         self.password_input = self.page.locator("input#pass, input#password")
         self.login_btn = self.page.locator("button#sgnBt, button#login-btn, button:has-text('Sign in')")
 
-    @allure.step("Navigate to Sign-In page and enter credentials")
     def login(self, username, password):
         self.navigate("https://www.ebay.com")
         if self.signin_link.is_visible():
@@ -28,5 +26,4 @@ class LoginPage(BasePage):
             self.password_input.fill(password)
             self.login_btn.click()
         except Exception:
-            allure.attach("Login flow interrupted (Captcha or security check likely)", name="Login Status")
             print("Warning: Login was interrupted. Test will continue as guest if possible.")

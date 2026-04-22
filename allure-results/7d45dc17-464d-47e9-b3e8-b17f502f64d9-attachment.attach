@@ -1,3 +1,0 @@
-Authentication blocked: Locator.wait_for: Timeout 10000ms exceeded.
-Call log:
-  - waiting for locator("input#userid, input#user") to be visible
