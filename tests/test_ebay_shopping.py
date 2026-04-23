@@ -11,9 +11,8 @@ def load_test_data():
         return json.load(f)
 
 @pytest.mark.e2e
-@pytest.mark.asyncio
 @pytest.mark.parametrize("data", load_test_data())
-async def test_ebay_shopping_flow(page, data):
+def test_ebay_shopping_flow(page, data):
     # Initialize Page Objects mapped to Playwright's page fixture
     login_page = LoginPage(page)
     home_page = HomePage(page)
@@ -22,17 +21,17 @@ async def test_ebay_shopping_flow(page, data):
     cart_page = CartPage(page)
 
     # 1. Authentication
-    await login_page.login(data["username"], data["password"])
+    login_page.login(data["username"], data["password"])
     
     # 2. Search Item
-    await home_page.search_item(data["search_term"])
+    home_page.search_item(data["search_term"])
 
     # 3. Filter by price and select first item
-    await search_page.filter_by_price(data["min_price"], data["max_price"])
-    await search_page.select_first_item()
+    search_page.filter_by_price(data["min_price"], data["max_price"])
+    search_page.select_first_item()
 
     # 4. Add to cart
-    await item_page.add_to_cart()
+    item_page.add_to_cart()
 
     # 5. Assert amount (Passing items_count=1 as only one item was added in this flow)
-    await cart_page.assert_cart_total_not_exceeds(float(data["max_price"]), 1)
+    cart_page.assert_cart_total_not_exceeds(float(data["max_price"]), 1)

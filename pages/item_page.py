@@ -40,3 +40,22 @@ class ItemPage(BasePage):
         # 3. Handle 'Go to cart' or 'No thanks' popups that might appear after adding
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(2000)
+        
+        # Optionally click 'Go to cart' if it's visible to ensure we are on the cart page for assertions
+        try:
+            go_to_cart_btn = self.page.locator("a:has-text('Go to cart'), button:has-text('Go to cart'), [data-test-id='view-cart']").first
+            if go_to_cart_btn.is_visible(timeout=3000):
+                go_to_cart_btn.click()
+                self.page.wait_for_load_state("load")
+        except:
+            pass
+
+    def add_items_to_cart(self, urls: list):
+        """
+        Navigates to multiple item URLs and adds each to the cart.
+        """
+        for url in urls:
+            print(f"Adding item to cart: {url}")
+            self.page.goto(url)
+            self.page.wait_for_load_state("load")
+            self.add_to_cart()

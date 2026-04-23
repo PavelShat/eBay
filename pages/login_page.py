@@ -17,13 +17,17 @@ class LoginPage(BasePage):
             self.page.goto("https://signin.ebay.com")
             
         self.username_input.wait_for(state="visible", timeout=10000)
-        self.username_input.fill(username)
+        self.page.wait_for_timeout(1000) # Small human-like delay
+        self.username_input.type(username, delay=100) # Type like a human
+        self.page.wait_for_timeout(500)
         self.continue_btn.click()
         
         # Soft wait for password field as eBay might show a Captcha here
         try:
             self.password_input.wait_for(state="visible", timeout=5000)
-            self.password_input.fill(password)
+            self.page.wait_for_timeout(1000)
+            self.password_input.type(password, delay=100)
+            self.page.wait_for_timeout(500)
             self.login_btn.click()
-        except Exception:
-            print("Warning: Login was interrupted. Test will continue as guest if possible.")
+        except Exception as e:
+            print(f"Warning: Login was interrupted. Reason: {repr(e)}. Test will continue as guest if possible.")

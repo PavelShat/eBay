@@ -50,7 +50,12 @@ class TestEbayCore:
         item_page.add_to_cart()
         time.sleep(3)
         # Verify cart counter or navigation to cart
-        assert "cart" in page.url.lower() or "shopping cart" in page.title().lower() or page.locator("#gh-cart-n").is_visible()
+        # Some eBay versions show a popup, others navigate. We ensure we see evidence of addition.
+        is_cart_page = "cart" in page.url.lower() or "shopping cart" in page.title().lower()
+        has_cart_count = page.locator("#gh-cart-n, .gh-cart-n, #gh-cart-count").is_visible()
+        has_success_msg = page.locator(".confirmation-message, .atc-success-msg, :has-text('Added to cart'), :has-text('item added')").first.is_visible()
+        
+        assert is_cart_page or has_cart_count or has_success_msg, f"No evidence of item added to cart. URL: {page.url}"
 
     @pytest.mark.order(4)
     def test_04_assert_cart_total_not_exceeds(self, page, data):

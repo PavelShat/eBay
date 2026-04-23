@@ -66,3 +66,40 @@ class SearchResultsPage(BasePage):
         self.page.goto(target_href)
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(2000)
+
+    def search_items_by_name_under_price(self, name: str, max_price: float, count: int):
+        """
+        Searches for items and returns a list of URLs for items under the max_price.
+        """
+        self.page.goto("https://www.ebay.com")
+        search_input = self.page.locator("input#gh-ac, input[aria-label='Search for anything']")
+        search_btn = self.page.locator("input#gh-btn, button#gh-search-btn, #gh-btn")
+        
+        search_input.wait_for(state="visible", timeout=15000)
+        search_input.fill(name)
+        search_btn.click()
+        
+        # Filter by price
+        self.filter_by_price("0", str(max_price))
+        
+        # Collect links - using multiple possible selectors for eBay items
+        self.page.wait_for_selector(".s-item__link, .s-item a, .s-card__link", state="attached", timeout=15000)
+        self.page.wait_for_timeout(2000) # Wait for results to settle
+        
+        links = self.item_links.all()
+        urls = []
+        
+        for link in links:
+            try:
+                href = link.get_attribute("href")
+                if href and re.search(r'\d{10,}', href) and "123456" not in href:
+                    if href.startswith("/"):
+                        href = "https://www.ebay.com" + href
+                    if href not in urls: # Avoid duplicates
+                        urls.append(href)
+                if len(urls) >= count:
+                    break
+            except:
+                continue
+        
+        return urls
