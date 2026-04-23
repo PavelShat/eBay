@@ -16,9 +16,8 @@ class SearchResultsPage(BasePage):
         self.min_price_input.first.fill(min_price)
         self.max_price_input.first.fill(max_price)
         self.max_price_input.first.press("Enter")
-        # Use a soft wait for navigation and load
-        self.page.wait_for_load_state("load")
-        self.page.wait_for_timeout(2000)
+        # Use a soft wait for navigation instead of load
+        self.page.wait_for_timeout(3000)
 
     def select_first_item(self):
         """
@@ -101,5 +100,90 @@ class SearchResultsPage(BasePage):
                     break
             except:
                 continue
-        
         return urls
+
+    def search_by_query(self, query: str, maxPrice: float, limit: int = 5, minPrice: str = "0"):
+        """
+        Uses XPath to retrieve the first `limit` items whose price is <= `maxPrice`.
+        Handles pagination if fewer than `limit` items are found on the first page.
+        """
+        # 1. Search for the query
+        self.page.goto("https://www.ebay.com")
+        search_input = self.page.locator("input#gh-ac, input[aria-label='Search for anything']")
+        search_btn = self.page.locator("input#gh-btn, button#gh-search-btn, #gh-btn")
+        
+        search_input.wait_for(state="visible", timeout=15000)
+        search_input.fill(query)
+        search_btn.click()
+        
+        # 2. Filter by price
+        self.filter_by_price(minPrice, str(maxPrice))
+        
+        # 3. XPath logic to collect items
+        collected_urls = []
+        page_num = 1
+        max_pages = 5
+        
+        while len(collected_urls) < limit and page_num <= max_pages:
+            print(f"--- Collecting items on page {page_num}, currently have {len(collected_urls)} ---", flush=True)
+            self.page.wait_for_timeout(3000)
+            
+            try:
+                # Wait for at least one price element to appear indicating items loaded
+                self.page.wait_for_selector("xpath=//*[contains(@class, 's-item__price')]", timeout=15000)
+            except Exception as e:
+                print(f"Items not visible: {e}", flush=True)
+                
+            # Use XPath to find all item containers on the page
+            item_elements = self.page.locator("xpath=//*[contains(@class, 's-item') or contains(@class, 's-card')]").all()
+            print(f"Found {len(item_elements)} item containers on page", flush=True)
+            
+            for item in item_elements:
+                if len(collected_urls) >= limit:
+                    break
+                    
+                try:
+                    price_element = item.locator("xpath=.//*[contains(@class, 's-item__price') or contains(@class, 's-card__price')]")
+                    if price_element.count() == 0:
+                        continue
+                        
+                    price_text = price_element.first.text_content()
+                    match = re.search(r'\$?([\d,.]+)', price_text)
+                    if match:
+                        numeric_str = match.group(1).replace(',', '')
+                        item_price = float(numeric_str)
+                        
+                        if item_price <= maxPrice:
+                            link_element = item.locator("xpath=.//a[contains(@class, 's-item__link') or contains(@class, 's-card__link')]")
+                            if link_element.count() > 0:
+                                href = link_element.first.get_attribute("href")
+                                if href and "123456" not in href and "product" not in href.lower():
+                                    if href.startswith("/"):
+                                        href = "https://www.ebay.com" + href
+                                    if href not in collected_urls:
+                                        collected_urls.append(href)
+                                        print(f"Added item: ${item_price} - {href[:50]}...", flush=True)
+                except Exception as e:
+                    print(f"Error parsing item: {e}", flush=True)
+                    continue
+            
+            if len(collected_urls) >= limit:
+                break
+                
+            print(f"Need more items (have {len(collected_urls)} of {limit}), looking for next page...", flush=True)
+            next_btn = self.page.locator("xpath=//a[contains(@class, 'pagination__next')]")
+            if next_btn.count() > 0 and next_btn.first.is_visible():
+                is_disabled = next_btn.first.get_attribute("aria-disabled")
+                if is_disabled == "true":
+                    print("Next button is disabled. Stopping.", flush=True)
+                    break
+                print("Navigating to next page...", flush=True)
+                next_btn.first.click()
+                self.page.wait_for_timeout(3000)
+                page_num += 1
+            else:
+                print("No visible Next button found. Stopping.", flush=True)
+                break
+                
+        return collected_urls
+
