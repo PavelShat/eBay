@@ -80,12 +80,5 @@ pip install pytest-reportportal
 Execute tests:
 
 Bash
-pytest
+pytest (python -m pytest)
 The results will automatically appear in the Launches tab of your ReportPortal project.
-
-## ⚠️ Limitations & Assumptions
-
-- **Login / Guest Flow**: eBay frequently triggers Captchas or security checks during automated login. The `LoginPage` is designed to attempt login but will fallback to **Guest** if the flow is interrupted.
-- **Currency Handling**: The framework extracts numeric values from price strings. It assumes decimal formatting consistent with USD.
-- **Dynamic Selectors**: Uses a multi-strategy locator approach to handle eBay's dynamic UI.
-- **Anti-Bot Measures**: Running tests at high frequency may trigger protections.
