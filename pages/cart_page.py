@@ -1,4 +1,5 @@
 import re
+import os
 from pages.base_page import BasePage
 
 class CartPage(BasePage):
@@ -51,8 +52,20 @@ class CartPage(BasePage):
                 total_amount = float(numeric_str) if numeric_str else 0.0
             
             print(f"Verified Cart Total: ${total_amount} (Limit: ${max_limit})")
+            
+            # Save screenshot of the cart page
+            screenshot_path = "reports/cart_verification.png"
+            os.makedirs("reports", exist_ok=True)
+            self.page.screenshot(path=screenshot_path)
+            print(f"Saved cart screenshot to {screenshot_path}", flush=True)
+            
             assert total_amount <= max_limit, f"Total ${total_amount} > Limit ${max_limit}"
             
         except Exception as e:
             print(f"Cart verification skipped/failed (likely CAPTCHA or Empty): {str(e)}")
-            pass 
+            # Even on failure, try to capture the state
+            try:
+                self.page.screenshot(path="reports/cart_error.png")
+            except:
+                pass
+            pass

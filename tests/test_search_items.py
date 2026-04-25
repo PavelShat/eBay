@@ -18,17 +18,12 @@ def test_search_items(page, data):
     print(f"\nSearching for: '{search_term}' with Max Price: ${max_price}")
     
     # Execute the search_by_query method
-    # Let's intercept to save a screenshot
     urls = search_page.search_by_query(
         query=search_term,
         maxPrice=max_price,
         limit=limit,
         minPrice=min_price
     )
-    
-    page.screenshot(path="debug_search.png", full_page=True)
-    with open("debug_search.html", "w", encoding="utf-8") as f:
-        f.write(page.content())
     
     print(f"Found {len(urls)} items matching criteria.")
     for idx, url in enumerate(urls, 1):
