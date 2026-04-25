@@ -11,6 +11,15 @@ class LoginPage(BasePage):
 
     def login(self, username, password):
         self.navigate("https://www.ebay.com")
+        
+        # Check if already logged in by looking for the "Hi [Name]" greeting
+        try:
+            if self.page.locator("#gh-ug, .gh-identity__greeting").filter(has_text="Hi").is_visible(timeout=5000):
+                print("User already logged in. Skipping login steps.", flush=True)
+                return
+        except:
+            pass
+
         if self.signin_link.is_visible():
             self.signin_link.click()
         else:

@@ -37,16 +37,29 @@ class ItemPage(BasePage):
         self.add_to_cart_btn.wait_for(state="visible", timeout=15000)
         self.add_to_cart_btn.click(force=True)
         
-        # 3. Handle 'Go to cart' or 'No thanks' popups that might appear after adding
-        self.page.wait_for_load_state("load")
-        self.page.wait_for_timeout(2000)
-        
-        # Optionally click 'Go to cart' if it's visible to ensure we are on the cart page for assertions
+        # 3. Handle 'Go to cart' side panel or navigation
+        # eBay often opens a side panel/popup. We need to find the button that takes us to the full cart.
         try:
-            go_to_cart_btn = self.page.locator("a:has-text('Go to cart'), button:has-text('Go to cart'), [data-test-id='view-cart']").first
-            if go_to_cart_btn.is_visible(timeout=3000):
-                go_to_cart_btn.click()
-                self.page.wait_for_load_state("load")
+            # We look for any button that looks like 'Go to cart' or 'View cart'
+            # .atc-overlay is common for the side panel
+            cart_selectors = [
+                "a:has-text('Go to cart')", 
+                "button:has-text('Go to cart')",
+                "[data-test-id='view-cart']",
+                ".atc-overlay-view-cart",
+                ".gh-cart-n", # Clicking the cart icon in header as fallback
+                "a[href*='cart']"
+            ]
+            
+            # Wait a bit for any animation
+            self.page.wait_for_timeout(2000)
+            
+            for selector in cart_selectors:
+                btn = self.page.locator(selector).first
+                if btn.is_visible():
+                    btn.click()
+                    self.page.wait_for_load_state("networkidle")
+                    break
         except:
             pass
 
