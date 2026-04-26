@@ -14,6 +14,7 @@ class ItemPage(BasePage):
         self.add_to_cart_btn = self.page.locator("a#atcBtn_btn_1, button#atcBtn_btn_1, [data-testid='x-atc-action'] button, [data-testid='x-atc-action'] a, #isCartBtn_btn").filter(has_text=re.compile(r"Add to (cart|basket)|See in cart", re.IGNORECASE)).first
 
     def add_to_cart(self):
+        self.handle_popups()
         # 0. Check if already in cart (eBay changes button text to 'See in cart')
         try:
             btn_text = (self.add_to_cart_btn.text_content() or "").strip()
@@ -143,10 +144,22 @@ class ItemPage(BasePage):
              self.add_to_cart_btn.click(force=True)
         
         # 3. Verify addition by checking cart count change or navigation
-        # We wait up to 10 seconds for the counter to increment
         self.logger.info("Verifying addition...")
-        for i in range(10):
+        success = False
+        for i in range(15): # Increased wait time
             self.page.wait_for_timeout(1000)
+            
+            # Check for "Additional service" / "Protect your purchase" modal
+            # This often appears AFTER clicking Add to Cart
+            try:
+                proceed_btn = self.page.locator("button:has-text('Proceed'), button:has-text('Continue'), .serv-dialog button.btn--primary").first
+                if proceed_btn.is_visible(timeout=500):
+                    self.logger.info("Handling 'Additional service' modal...")
+                    proceed_btn.click()
+                    self.page.wait_for_timeout(1000)
+            except:
+                pass
+
             try:
                 cart_badge = self.page.locator("#gh-cart-n, .gh-cart-n").first
                 if cart_badge.is_visible(timeout=500):
@@ -154,16 +167,22 @@ class ItemPage(BasePage):
                     current_count = int(re.sub(r'\D', '', current_count_text))
                     if current_count > initial_count:
                         self.logger.info(f"Success: Cart count increased to {current_count}")
+                        success = True
                         break
             except:
                 pass
             
             # Also check if we navigated to cart or saw a success message
-            if "cart" in self.page.url.lower() or self.page.locator(".atc-overlay, :has-text('item added')").first.is_visible(timeout=500):
+            if "cart" in self.page.url.lower() or self.page.locator(".atc-overlay, :has-text('item added'), #atc-overlay-wrapper").first.is_visible(timeout=500):
                 self.logger.info("Success: Navigated to cart or saw confirmation.")
+                success = True
                 break
-            if i == 9:
-                self.logger.warning("Could not verify addition via count or overlay.")
+        
+        if not success:
+            # Capture failure state
+            os.makedirs("reports", exist_ok=True)
+            self.page.screenshot(path=f"reports/add_to_cart_failure_{random.randint(1000,9999)}.png")
+            raise Exception(f"Failed to verify item addition to cart. Initial count: {initial_count}, Cart URL: {self.page.url}")
         
         # 4. Handle 'Go to cart' side panel or navigation
         try:

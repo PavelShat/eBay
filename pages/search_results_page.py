@@ -88,6 +88,7 @@ class SearchResultsPage(BasePage):
         search_btn.click()
         
         # Filter by price
+        self.handle_popups()
         self.filter_by_price("0", str(max_price))
         
         # Collect links - using multiple possible selectors for eBay items
@@ -128,6 +129,7 @@ class SearchResultsPage(BasePage):
         search_btn.click()
         
         # 2. Filter by price
+        self.handle_popups()
         self.filter_by_price(minPrice, str(maxPrice))
         
         # 3. XPath logic to collect items
