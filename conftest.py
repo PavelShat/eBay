@@ -98,7 +98,6 @@ def page(context):
         "button:has-text('Maybe later')",
         "button:has-text('No thanks')",
         "button:has-text('Proceed')",
-        "button:has-text('Continue')",
         "[data-testid='x-atc-action-overlay'] button"
     ]
     

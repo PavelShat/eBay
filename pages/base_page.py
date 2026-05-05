@@ -25,7 +25,9 @@ class BasePage:
             "#shale-overlay-container .close-button",
             "button:has-text('Maybe later')",
             "button:has-text('No thanks')",
-            ".gh-eb-pop [aria-label='Close']"
+            ".gh-eb-pop [aria-label='Close']",
+            "button#gdpr-banner-accept",
+            "button:has-text('Accept all')"
         ]
         
         for selector in popup_selectors:

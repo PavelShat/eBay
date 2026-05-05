@@ -6,10 +6,10 @@ class LoginPage(BasePage):
     def __init__(self, page):
         super().__init__(page)
         self.signin_link = self.page.locator("a[href*='signin'], a:has-text('Sign in')").first
-        self.username_input = self.page.locator("input#userid, input#user")
+        self.username_input = self.page.locator("input#userid, input#user, input[name='userid']")
         self.continue_btn = self.page.locator("button#signin-continue-btn, button#btn-continue, button:has-text('Continue')")
-        self.password_input = self.page.locator("input#pass, input#password")
-        self.login_btn = self.page.locator("button#sgnBt, button#login-btn, button:has-text('Sign in')")
+        self.password_input = self.page.locator("input#pass, input#password, input[name='pass']")
+        self.login_btn = self.page.locator("button#sgnBt, button#login-btn, button:has-text('Sign in'), button:has-text('Log in')")
 
     def login(self, username, password):
         self.navigate("https://www.ebay.com")
@@ -41,11 +41,23 @@ class LoginPage(BasePage):
                 self.logger.error("Verification not solved in time. Failing.")
                 raise Exception("Login blocked by verification")
 
-        try:
-            self.username_input.wait_for(state="visible", timeout=15000)
-        except:
-            self.logger.error("Username input not found. Might be blocked by CAPTCHA.")
-            raise Exception("Login page not loaded correctly")
+        # Ensure page is fully loaded and settled
+        self.page.wait_for_load_state("domcontentloaded")
+        self.page.wait_for_timeout(2000) # Short buffer for hydration
+        
+        # Retry logic for username input in case of slow hydration
+        for attempt in range(3):
+            try:
+                self.username_input.wait_for(state="visible", timeout=20000)
+                break
+            except Exception as e:
+                self.logger.warning(f"Attempt {attempt + 1}: Username input not visible yet. Current URL: {self.page.url}")
+                if attempt == 2:
+                    self.logger.error("Username input not found after 3 attempts.")
+                    raise Exception("Login page not loaded correctly or blocked by verification")
+                self.page.reload()
+                self.page.wait_for_load_state("domcontentloaded")
+                self.page.wait_for_timeout(2000)
         self.page.wait_for_timeout(1000) 
         self.logger.info(f"Entering username: {username}")
         self.username_input.fill(username)
